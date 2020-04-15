@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <title>Zoomba Home Page</title>
+  <style>
+  article { margin: 1.0em; }
+  </style>
+</head>
+<body>
+        <section id="main"></section>
+        <section>
+        Användarnamn: <input type="text" id="namn" /> Url: <input type="text" id="url" /> <button id="create">Skapa</button>
+        </section>
+<script>
+"use strict";
+
+var URL = "http://localhost:3000/urls/";
+
+//////////////////////////////////////////////////////////
+// Wait for DOM Content loaded
+//////////////////////////////////////////////////////////
+document.addEventListener("DOMContentLoaded", function(){ 
+    var xmlhttp = new XMLHttpRequest();
+
+    //////////////////////////////////////////////////////////
+    // Get all users from web service
+    //////////////////////////////////////////////////////////
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+           if (xmlhttp.status == 200) {
+                let jsonData = JSON.parse( xmlhttp.responseText );
+                let str = ""; 
+                for(var i=0; i < jsonData.length; i++){
+                    str += "<article id='"+jsonData[i]._id+"'>"+jsonData[i].name+" (<a href='"+jsonData[i].url+"' target='_blank'>" + jsonData[i].url + "</a>)";
+                        str += " <img src='images/papperskorg.png' alt='Erase user' id=" + jsonData[i]._id + " /></article>";    
+                }
+                document.getElementById("main").innerHTML = str;
+           }
+           else if (xmlhttp.status == 400) {
+              alert('There was an error 400');
+           } else {
+              alert('something else other than 200 was returned');
+           }
+        }
+    };
+    xmlhttp.open("GET", URL, true);
+    xmlhttp.send();
+
+
+
+    //////////////////////////////////////////////////////////
+    // Create new user
+    //////////////////////////////////////////////////////////
+    document.getElementById("create").addEventListener("click", function(){ 
+        var xmlhttp = new XMLHttpRequest();
+
+        //
+        // REST web service - POST
+        var obj = {};
+	    obj.name = document.getElementById("namn").value;
+        obj.url = document.getElementById("url").value;
+    
+        xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+                if (xmlhttp.status == 200) {
+                    var jsonData = JSON.parse( xmlhttp.responseText );
+                    document.getElementById("main").innerHTML += "<article id='"+jsonData._id+"'>"+jsonData.name+" (<a href='"+jsonData.url
+                        +"' target='_blank'>" + jsonData.url + "</a> <img src='images/papperskorg.png' alt='Erase user' id=" + jsonData._id + " /></article>";                          
+                     location.reload();      
+                }
+                else if (xmlhttp.status == 400) {
+                    alert('There was an error 400');
+                }
+                else {
+                    alert('something else other than 200 was returned');
+                }
+            }
+        };
+
+        xmlhttp.open("POST", URL, true);
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+        xmlhttp.send(JSON.stringify(obj));
+    }); 
+
+
+    //////////////////////////////////////////////////////////
+    // Delete user
+    //////////////////////////////////////////////////////////
+    document.getElementById("main").addEventListener('click', function(e) {
+        if (event.target instanceof HTMLImageElement) { // Check if image clicked
+    
+        xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+                if (xmlhttp.status == 200) {
+                    var jsonData = JSON.parse( xmlhttp.responseText );
+                    location.reload();
+                }
+                else if (xmlhttp.status == 400) {
+                    alert('There was an error 400');
+                }
+                else {
+                    alert('something else other than 200 was returned');
+                }
+            }
+        };
+
+        xmlhttp.open("DELETE", URL+event.target.id, true);
+        xmlhttp.send();
+        
+        }
+    
+	});
+
+}); 
+
+</script>
+</body>
+</html>
